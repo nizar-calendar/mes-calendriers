@@ -1,21 +1,14 @@
-Nizar
-	
-01:49 (il y a 0 minute)
-	
-	
-À moi
-Ce message semble être en anglais
 <!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Gestion Calendriers Airbnb / Booking / Expedia</title>
+<title>Gestion Calendriers</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f7fa; color: #2c3e50; padding: 20px; }
   .container { max-width: 1400px; margin: 0 auto; }
-  header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px; }
+  header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 16px; }
   h1 { font-size: 24px; }
   .legend { display: flex; gap: 16px; flex-wrap: wrap; }
   .legend-item { display: flex; align-items: center; gap: 6px; font-size: 14px; }
@@ -23,12 +16,29 @@ Ce message semble être en anglais
   .dot.airbnb { background: #FF5A5F; }
   .dot.booking { background: #003580; }
   .dot.expedia { background: #FFC72C; }
+  .dot.p0 { background: #27ae60; }
+  .dot.p1 { background: #3498db; }
+  .dot.p2 { background: #e67e22; }
+  .dot.p3 { background: #9b59b6; }
+  .dot.p4 { background: #e74c3c; }
+  .dot.p5 { background: #16a085; }
+
+  /* Onglets logements */
+  .tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .tab { background: white; border: 2px solid #e0e0e0; padding: 10px 16px; border-radius: 10px; cursor: pointer; font-size: 14px; font-weight: 500; white-space: nowrap; display: flex; align-items: center; gap: 6px; transition: all 0.2s; }
+  .tab.active { border-color: #3498db; background: #3498db; color: white; }
+  .tab .color-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .tab .edit-icon { font-size: 12px; opacity: 0.6; margin-left: 4px; }
+  .tab.add { border-style: dashed; color: #6c757d; }
+
   .toolbar { display: flex; justify-content: space-between; align-items: center; background: white; padding: 16px 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
-  .nav-buttons { display: flex; gap: 8px; align-items: center; }
+  .nav-buttons { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
   button { background: #3498db; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; }
   button:hover { background: #2980b9; }
   button.secondary { background: white; color: #2c3e50; border: 1px solid #ddd; }
   button.secondary:hover { background: #f0f0f0; }
+  button.danger { background: #e74c3c; }
+  button.danger:hover { background: #c0392b; }
   .month-title { font-size: 20px; font-weight: 600; min-width: 200px; text-align: center; }
   .calendar { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
   .weekdays { display: grid; grid-template-columns: repeat(7, 1fr); background: #f8f9fa; border-bottom: 1px solid #e9ecef; }
@@ -42,7 +52,14 @@ Ce message semble être en anglais
   .event { font-size: 11px; padding: 3px 6px; border-radius: 4px; margin-bottom: 3px; color: white; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
   .event.airbnb { background: #FF5A5F; }
   .event.booking { background: #003580; }
-  .event.expedia { background: #b8860b; color: #fff; }
+  .event.expedia { background: #b8860b; }
+  .event.color-0 { background: #27ae60; }
+  .event.color-1 { background: #3498db; }
+  .event.color-2 { background: #e67e22; }
+  .event.color-3 { background: #9b59b6; }
+  .event.color-4 { background: #e74c3c; }
+  .event.color-5 { background: #16a085; }
+
   .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
   .modal-overlay.active { display: flex; }
   .modal { background: white; border-radius: 12px; padding: 24px; max-width: 500px; width: 100%; max-height: 90vh; overflow-y: auto; }
@@ -58,23 +75,36 @@ Ce message semble être en anglais
   .import-row { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
   .import-row select { padding: 8px; border-radius: 6px; border: 1px solid #ddd; }
   .import-row input[type=text] { flex: 1; padding: 8px; border-radius: 6px; border: 1px solid #ddd; min-width: 200px; }
+  .info-box { background: #e8f4fd; border-left: 4px solid #3498db; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; font-size: 13px; line-height: 1.6; }
+  .info-box strong { color: #2c3e50; }
+  .stats { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+  .stat { background: white; padding: 12px 16px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); min-width: 120px; }
+  .stat .num { font-size: 22px; font-weight: 700; color: #3498db; }
+  .stat .lbl { font-size: 12px; color: #6c757d; }
+
   @media (max-width: 700px) {
-    .day { min-height: 70px; font-size: 11px; }
-    .month-title { min-width: auto; font-size: 16px; }
-    .weekdays div { padding: 8px 4px; font-size: 11px; }
+    body { padding: 10px; }
+    h1 { font-size: 18px; }
+    .day { min-height: 70px; font-size: 11px; padding: 3px; }
+    .month-title { min-width: auto; font-size: 15px; }
+    .weekdays div { padding: 6px 2px; font-size: 11px; }
+    .event { font-size: 9px; padding: 2px 4px; }
+    .day-number { font-size: 11px; }
+    .tab { padding: 8px 12px; font-size: 13px; }
   }
 </style>
 </head>
 <body>
 <div class="container">
   <header>
-    <h1>📅 Gestion des calendriers</h1>
-    <div class="legend">
-      <div class="legend-item"><span class="dot airbnb"></span> Airbnb</div>
-      <div class="legend-item"><span class="dot booking"></span> Booking</div>
-      <div class="legend-item"><span class="dot expedia"></span> Expedia</div>
-    </div>
+    <h1>📅 Mes calendriers</h1>
+    <div class="legend" id="legend"></div>
   </header>
+
+  <!-- Onglets logements -->
+  <div class="tabs" id="tabs"></div>
+
+  <div class="stats" id="stats"></div>
 
   <div class="toolbar">
     <div class="nav-buttons">
@@ -84,9 +114,9 @@ Ce message semble être en anglais
       <button class="secondary" onclick="goToday()">Aujourd'hui</button>
     </div>
     <div class="nav-buttons">
-      <button onclick="openModal()">+ Nouvelle réservation</button>
+      <button onclick="openModal()">+ Réservation</button>
       <button class="secondary" onclick="exportData()">💾 Exporter</button>
-      <button class="secondary" onclick="document.getElementById('importFile').click()">📂 Importer</button>
+      <button class="secondary" onclick="document.getElementById('importFile').click()">📂 Importer .ics</button>
       <input type="file" id="importFile" accept=".json,.ics" style="display:none" onchange="importData(event)">
     </div>
   </div>
@@ -99,9 +129,13 @@ Ce message semble être en anglais
   </div>
 
   <div class="import-zone">
-    <h3>🔗 Importer depuis iCal (Airbnb / Booking / Expedia)</h3>
-    <p>Colle l'URL iCal fournie par la plateforme pour synchroniser automatiquement.</p>
+    <h3>🔗 Import automatique iCal</h3>
+    <div class="info-box">
+      <strong>💡 Conseil anti-doublons :</strong> Comme tes 4 logements sont sur les 3 plateformes, elles se synchronisent entre elles. Pour éviter les doublons, importe <strong>une seule plateforme par logement</strong> (celle qui a le plus de réservations, en général Airbnb).
+    </div>
+    <p>Colle l'URL iCal et choisis le logement :</p>
     <div class="import-row">
+      <select id="icalProperty"></select>
       <select id="icalPlatform">
         <option value="airbnb">Airbnb</option>
         <option value="booking">Booking</option>
@@ -110,15 +144,17 @@ Ce message semble être en anglais
       <input type="text" id="icalUrl" placeholder="https://.../calendar.ics">
       <button onclick="importICal()">Synchroniser</button>
     </div>
-    <p style="font-size:12px;color:#e67e22;margin-top:8px;">
-      ⚠️ Si l'import échoue (CORS), utilise le bouton "📂 Importer" en haut avec un fichier .ics téléchargé manuellement.
-    </p>
   </div>
 </div>
 
+<!-- Modal réservation -->
 <div class="modal-overlay" id="modal">
   <div class="modal">
     <h2 id="modalTitle">Nouvelle réservation</h2>
+    <div class="field">
+      <label>Logement</label>
+      <select id="fProperty"></select>
+    </div>
     <div class="field">
       <label>Plateforme</label>
       <select id="fPlatform">
@@ -151,26 +187,158 @@ Ce message semble être en anglais
   </div>
 </div>
 
+<!-- Modal logement -->
+<div class="modal-overlay" id="propModal">
+  <div class="modal">
+    <h2 id="propModalTitle">Nouveau logement</h2>
+    <div class="field">
+      <label>Nom du logement</label>
+      <input type="text" id="pName" placeholder="Ex: Appart Centre-Ville">
+    </div>
+    <div class="field">
+      <label>Couleur (pour la vue "Tous")</label>
+      <select id="pColor">
+        <option value="0">🟢 Vert</option>
+        <option value="1">🔵 Bleu</option>
+        <option value="2">🟠 Orange</option>
+        <option value="3">🟣 Violet</option>
+        <option value="4">🔴 Rouge</option>
+        <option value="5">🟦 Turquoise</option>
+      </select>
+    </div>
+    <div class="actions">
+      <button class="delete" id="deletePropBtn" onclick="deleteProperty()">Supprimer</button>
+      <button class="secondary" onclick="closePropModal()">Annuler</button>
+      <button onclick="saveProperty()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
 <script>
+// ============ ÉTAT ============
+let properties = JSON.parse(localStorage.getItem('properties') || '[]');
 let reservations = JSON.parse(localStorage.getItem('reservations') || '[]');
 let currentDate = new Date();
+let activePropertyId = 'all'; // 'all' ou un id de logement
 let editingId = null;
+let editingPropId = null;
 
-function save() { localStorage.setItem('reservations', JSON.stringify(reservations)); }
+// Init : créer 4 logements par défaut si vide
+if (properties.length === 0) {
+  properties = [
+    { id: 'p1', name: 'Logement 1', color: 0 },
+    { id: 'p2', name: 'Logement 2', color: 1 },
+    { id: 'p3', name: 'Logement 3', color: 2 },
+    { id: 'p4', name: 'Logement 4', color: 3 }
+  ];
+  save();
+}
 
+function save() {
+  localStorage.setItem('properties', JSON.stringify(properties));
+  localStorage.setItem('reservations', JSON.stringify(reservations));
+}
+
+// ============ ONGLETS ============
+function renderTabs() {
+  const tabs = document.getElementById('tabs');
+  tabs.innerHTML = '';
+
+  // Onglet "Tous"
+  const allTab = document.createElement('div');
+  allTab.className = 'tab' + (activePropertyId === 'all' ? ' active' : '');
+  allTab.textContent = '🏠 Tous';
+  allTab.onclick = () => { activePropertyId = 'all'; renderAll(); };
+  tabs.appendChild(allTab);
+
+  // Un onglet par logement
+  properties.forEach(p => {
+    const tab = document.createElement('div');
+    tab.className = 'tab' + (activePropertyId === p.id ? ' active' : '');
+    tab.onclick = (e) => {
+      if (e.target.classList.contains('edit-icon')) {
+        openPropModal(p.id);
+      } else {
+        activePropertyId = p.id;
+        renderAll();
+      }
+    };
+    tab.innerHTML = `
+      <span class="color-dot" style="background:${getColor(p.color)}"></span>
+      ${p.name}
+      <span class="edit-icon">✏️</span>
+    `;
+    tabs.appendChild(tab);
+  });
+
+  // Bouton ajouter
+  const addTab = document.createElement('div');
+  addTab.className = 'tab add';
+  addTab.textContent = '+ Ajouter';
+  addTab.onclick = () => openPropModal();
+  tabs.appendChild(addTab);
+}
+
+function getColor(index) {
+  const colors = ['#27ae60', '#3498db', '#e67e22', '#9b59b6', '#e74c3c', '#16a085'];
+  return colors[index % colors.length];
+}
+
+// ============ LÉGENDE ============
+function renderLegend() {
+  const legend = document.getElementById('legend');
+  if (activePropertyId === 'all') {
+    // Vue "Tous" : légende par logement
+    legend.innerHTML = properties.map(p =>
+      `<div class="legend-item"><span class="dot" style="background:${getColor(p.color)}"></span> ${p.name}</div>`
+    ).join('');
+  } else {
+    // Vue logement : légende par plateforme
+    legend.innerHTML = `
+      <div class="legend-item"><span class="dot airbnb"></span> Airbnb</div>
+      <div class="legend-item"><span class="dot booking"></span> Booking</div>
+      <div class="legend-item"><span class="dot expedia"></span> Expedia</div>
+    `;
+  }
+}
+
+// ============ STATS ============
+function renderStats() {
+  const list = getFilteredReservations();
+  const today = formatDate(new Date());
+  const upcoming = list.filter(r => r.start > today).length;
+  const current = list.filter(r => r.start <= today && r.end > today).length;
+
+  document.getElementById('stats').innerHTML = `
+    <div class="stat"><div class="num">${list.length}</div><div class="lbl">Réservations</div></div>
+    <div class="stat"><div class="num">${upcoming}</div><div class="lbl">À venir</div></div>
+    <div class="stat"><div class="num">${current}</div><div class="lbl">En cours</div></div>
+    <div class="stat"><div class="num">${properties.length}</div><div class="lbl">Logements</div></div>
+  `;
+}
+
+function getFilteredReservations() {
+  if (activePropertyId === 'all') return reservations;
+  return reservations.filter(r => r.propertyId === activePropertyId);
+}
+
+// ============ CALENDRIER ============
 function renderCalendar() {
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
   const monthNames = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
   document.getElementById('monthTitle').textContent = `${monthNames[month]} ${year}`;
+
   const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
   let startWeekday = firstDay.getDay() - 1;
   if (startWeekday < 0) startWeekday = 6;
+
   const daysGrid = document.getElementById('days');
   daysGrid.innerHTML = '';
   const today = new Date();
   today.setHours(0,0,0,0);
+
   const prevMonthLast = new Date(year, month, 0).getDate();
   for (let i = startWeekday - 1; i >= 0; i--) {
     daysGrid.appendChild(createDayCell(prevMonthLast - i, true, new Date(year, month - 1, prevMonthLast - i)));
@@ -192,21 +360,34 @@ function createDayCell(dayNum, otherMonth, date) {
   const cell = document.createElement('div');
   cell.className = 'day';
   if (otherMonth) cell.classList.add('other-month');
+
   const numEl = document.createElement('div');
   numEl.className = 'day-number';
   numEl.textContent = dayNum;
   cell.appendChild(numEl);
+
   const dateStr = formatDate(date);
-  reservations.forEach(r => {
+  const list = getFilteredReservations();
+
+  list.forEach(r => {
     if (dateStr >= r.start && dateStr < r.end) {
       const ev = document.createElement('div');
-      ev.className = `event ${r.platform}`;
-      ev.textContent = r.name || r.platform;
+      // En vue "Tous" : couleur par logement. Sinon : couleur par plateforme
+      if (activePropertyId === 'all') {
+        const prop = properties.find(p => p.id === r.propertyId);
+        ev.className = `event color-${prop ? prop.color : 0}`;
+        const propName = prop ? prop.name : '?';
+        ev.textContent = `${propName} · ${r.name || r.platform}`;
+      } else {
+        ev.className = `event ${r.platform}`;
+        ev.textContent = r.name || r.platform;
+      }
       ev.title = `${r.platform} · ${r.name}\n${r.start} → ${r.end}`;
       ev.onclick = (e) => { e.stopPropagation(); openModal(r.id); };
       cell.appendChild(ev);
     }
   });
+
   cell.onclick = () => openModal(null, dateStr);
   return cell;
 }
@@ -221,15 +402,29 @@ function formatDate(d) {
 function changeMonth(delta) { currentDate.setMonth(currentDate.getMonth() + delta); renderCalendar(); }
 function goToday() { currentDate = new Date(); renderCalendar(); }
 
+// ============ MODAL RÉSERVATION ============
+function fillPropertySelect(selectEl) {
+  selectEl.innerHTML = '';
+  properties.forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = p.id;
+    opt.textContent = p.name;
+    selectEl.appendChild(opt);
+  });
+}
+
 function openModal(id = null, prefillDate = null) {
   editingId = id;
   const modal = document.getElementById('modal');
   const title = document.getElementById('modalTitle');
   const delBtn = document.getElementById('deleteBtn');
+  fillPropertySelect(document.getElementById('fProperty'));
+
   if (id) {
     const r = reservations.find(x => x.id === id);
     if (!r) return;
     title.textContent = 'Modifier la réservation';
+    document.getElementById('fProperty').value = r.propertyId || properties[0].id;
     document.getElementById('fPlatform').value = r.platform;
     document.getElementById('fName').value = r.name || '';
     document.getElementById('fStart').value = r.start;
@@ -238,6 +433,8 @@ function openModal(id = null, prefillDate = null) {
     delBtn.style.display = 'block';
   } else {
     title.textContent = 'Nouvelle réservation';
+    document.getElementById('fProperty').value =
+      activePropertyId !== 'all' ? activePropertyId : properties[0].id;
     document.getElementById('fPlatform').value = 'airbnb';
     document.getElementById('fName').value = '';
     document.getElementById('fStart').value = prefillDate || formatDate(new Date());
@@ -256,21 +453,27 @@ function closeModal() {
 }
 
 function saveReservation() {
+  const propertyId = document.getElementById('fProperty').value;
   const platform = document.getElementById('fPlatform').value;
   const name = document.getElementById('fName').value.trim();
   const start = document.getElementById('fStart').value;
   const end = document.getElementById('fEnd').value;
   const notes = document.getElementById('fNotes').value.trim();
+
   if (!start || !end) return alert('Renseigne les dates.');
   if (end <= start) return alert('La date de départ doit être après l\'arrivée.');
+
   if (editingId) {
     const r = reservations.find(x => x.id === editingId);
-    Object.assign(r, { platform, name, start, end, notes });
+    Object.assign(r, { propertyId, platform, name, start, end, notes });
   } else {
-    reservations.push({ id: Date.now().toString(), platform, name, start, end, notes });
+    reservations.push({
+      id: Date.now().toString(),
+      propertyId, platform, name, start, end, notes
+    });
   }
   save();
-  renderCalendar();
+  renderAll();
   closeModal();
 }
 
@@ -279,21 +482,64 @@ function deleteReservation() {
   if (!confirm('Supprimer cette réservation ?')) return;
   reservations = reservations.filter(x => x.id !== editingId);
   save();
-  renderCalendar();
+  renderAll();
   closeModal();
 }
 
-function exportData() {
-  const blob = new Blob([JSON.stringify(reservations, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `reservations-${formatDate(new Date())}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
+// ============ MODAL LOGEMENT ============
+function openPropModal(id = null) {
+  editingPropId = id;
+  const modal = document.getElementById('propModal');
+  if (id) {
+    const p = properties.find(x => x.id === id);
+    if (!p) return;
+    document.getElementById('propModalTitle').textContent = 'Modifier le logement';
+    document.getElementById('pName').value = p.name;
+    document.getElementById('pColor').value = p.color;
+    document.getElementById('deletePropBtn').style.display = 'block';
+  } else {
+    document.getElementById('propModalTitle').textContent = 'Nouveau logement';
+    document.getElementById('pName').value = '';
+    document.getElementById('pColor').value = properties.length % 6;
+    document.getElementById('deletePropBtn').style.display = 'none';
+  }
+  modal.classList.add('active');
 }
 
-// ========== IMPORT (JSON OU ICS) ==========
+function closePropModal() {
+  document.getElementById('propModal').classList.remove('active');
+  editingPropId = null;
+}
+
+function saveProperty() {
+  const name = document.getElementById('pName').value.trim();
+  const color = parseInt(document.getElementById('pColor').value);
+  if (!name) return alert('Donne un nom au logement.');
+  if (editingPropId) {
+    const p = properties.find(x => x.id === editingPropId);
+    p.name = name;
+    p.color = color;
+  } else {
+    properties.push({ id: 'p' + Date.now(), name: name, color: color });
+  }
+  save();
+  renderAll();
+  closePropModal();
+}
+
+function deleteProperty() {
+  if (!editingPropId) return;
+  if (properties.length <= 1) return alert('Il faut au moins un logement.');
+  if (!confirm('Supprimer ce logement et toutes ses réservations ?')) return;
+  properties = properties.filter(x => x.id !== editingPropId);
+  reservations = reservations.filter(r => r.propertyId !== editingPropId);
+  if (activePropertyId === editingPropId) activePropertyId = 'all';
+  save();
+  renderAll();
+  closePropModal();
+}
+
+// ============ IMPORT ============
 function importData(event) {
   const file = event.target.files[0];
   if (!file) return;
@@ -302,22 +548,28 @@ function importData(event) {
     const content = e.target.result;
     try {
       if (file.name.toLowerCase().endsWith('.ics') || content.includes('BEGIN:VCALENDAR')) {
-        // Import iCal
-        const count = parseICalContent(content, 'airbnb');
+        // Demander à quel logement associer
+        const targetPropId = activePropertyId !== 'all' ? activePropertyId : properties[0].id;
+        const propName = properties.find(p => p.id === targetPropId).name;
+        if (!confirm(`Importer ce fichier iCal pour le logement "${propName}" ?\n\n(Tu pourras changer le logement après en modifiant chaque résa.)`)) {
+          event.target.value = '';
+          return;
+        }
+        const platform = prompt('Quelle plateforme ? (airbnb / booking / expedia)', 'airbnb') || 'airbnb';
+        const count = parseICalContent(content, platform, targetPropId);
         save();
-        renderCalendar();
-        alert(`✅ ${count} réservation(s) importée(s) depuis le fichier iCal.`);
+        renderAll();
+        alert(`✅ ${count} nouvelle(s) réservation(s) importée(s).\n(Doublons ignorés automatiquement)`);
       } else {
-        // Import JSON
         const data = JSON.parse(content);
-        if (!Array.isArray(data)) throw new Error('Format JSON invalide');
+        if (!Array.isArray(data)) throw new Error('Format invalide');
         if (confirm(`Importer ${data.length} réservations ?`)) {
           data.forEach(r => {
             r.id = r.id || Date.now().toString() + Math.random();
             reservations.push(r);
           });
           save();
-          renderCalendar();
+          renderAll();
           alert(`✅ ${data.length} réservation(s) importée(s).`);
         }
       }
@@ -329,38 +581,40 @@ function importData(event) {
   reader.readAsText(file);
 }
 
-// ========== IMPORT iCal via URL ==========
 async function importICal() {
   const url = document.getElementById('icalUrl').value.trim();
   const platform = document.getElementById('icalPlatform').value;
+  const propertyId = document.getElementById('icalProperty').value;
   if (!url) return alert('Colle une URL iCal.');
+  if (!propertyId) return alert('Choisis un logement.');
+
   try {
     const res = await fetch(url);
-    if (!res.ok) throw new Error('Erreur HTTP ' + res.status);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
     const text = await res.text();
-    const count = parseICalContent(text, platform);
+    const count = parseICalContent(text, platform, propertyId);
     save();
-    renderCalendar();
-    alert(`✅ ${count} réservation(s) importée(s).`);
+    renderAll();
+    alert(`✅ ${count} nouvelle(s) réservation(s).\n(Doublons ignorés)`);
     document.getElementById('icalUrl').value = '';
   } catch (err) {
     try {
       const proxy = 'https://corsproxy.io/?' + encodeURIComponent(url);
       const res = await fetch(proxy);
-      if (!res.ok) throw new Error('Erreur proxy ' + res.status);
+      if (!res.ok) throw new Error('Proxy ' + res.status);
       const text = await res.text();
-      const count = parseICalContent(text, platform);
+      const count = parseICalContent(text, platform, propertyId);
       save();
-      renderCalendar();
-      alert(`✅ ${count} réservation(s) importée(s).`);
+      renderAll();
+      alert(`✅ ${count} nouvelle(s) réservation(s).`);
       document.getElementById('icalUrl').value = '';
     } catch (err2) {
-      alert('Impossible de récupérer l\'iCal.\nTélécharge le fichier .ics et importe-le avec le bouton 📂 Importer.\n\nDétail: ' + err2.message);
+      alert('⚠️ CORS bloqué.\n\nTélécharge le fichier .ics depuis ton navigateur (colle l\'URL dans un onglet), puis utilise le bouton "📂 Importer .ics".');
     }
   }
 }
 
-function parseICalContent(text, platform) {
+function parseICalContent(text, platform, propertyId) {
   const events = text.split('BEGIN:VEVENT').slice(1);
   let count = 0;
   events.forEach(ev => {
@@ -371,18 +625,23 @@ function parseICalContent(text, platform) {
     const start = icalDateToISO(dtstart);
     const end = icalDateToISO(dtend);
     if (!start || !end) return;
-    const exists = reservations.some(r => r.start === start && r.end === end && r.platform === platform);
-    if (!exists) {
-      reservations.push({
-        id: Date.now().toString() + Math.random(),
-        platform: platform,
-        name: summary || platform,
-        start: start,
-        end: end,
-        notes: 'Import iCal'
-      });
-      count++;
-    }
+
+    // ANTI-DOUBLON : même logement + mêmes dates = doublon
+    const exists = reservations.some(r =>
+      r.propertyId === propertyId && r.start === start && r.end === end
+    );
+    if (exists) return;
+
+    reservations.push({
+      id: Date.now().toString() + Math.random(),
+      propertyId: propertyId,
+      platform: platform,
+      name: summary || platform,
+      start: start,
+      end: end,
+      notes: 'Import iCal'
+    });
+    count++;
   });
   return count;
 }
@@ -399,12 +658,42 @@ function icalDateToISO(s) {
   return `${clean.slice(0,4)}-${clean.slice(4,6)}-${clean.slice(6,8)}`;
 }
 
+// ============ EXPORT ============
+function exportData() {
+  const data = { properties, reservations };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `backup-calendriers-${formatDate(new Date())}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ============ RENDER ALL ============
+function renderAll() {
+  renderTabs();
+  renderLegend();
+  renderStats();
+  renderCalendar();
+  fillPropertySelect(document.getElementById('icalProperty'));
+  if (activePropertyId !== 'all') {
+    document.getElementById('icalProperty').value = activePropertyId;
+  }
+}
+
+// ============ INIT ============
 document.getElementById('modal').addEventListener('click', (e) => {
   if (e.target.classList.contains('modal-overlay')) closeModal();
 });
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+document.getElementById('propModal').addEventListener('click', (e) => {
+  if (e.target.classList.contains('modal-overlay')) closePropModal();
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') { closeModal(); closePropModal(); }
+});
 
-renderCalendar();
+renderAll();
 </script>
 </body>
 </html>

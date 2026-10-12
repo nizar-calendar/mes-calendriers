@@ -1,0 +1,590 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gestion Calendriers Airbnb / Booking / Expedia</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #f5f7fa;
+    color: #2c3e50;
+    padding: 20px;
+  }
+  .container { max-width: 1400px; margin: 0 auto; }
+  
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  h1 { font-size: 24px; }
+  .legend {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+  }
+  .dot {
+    width: 12px; height: 12px; border-radius: 50%;
+  }
+  .dot.airbnb { background: #FF5A5F; }
+  .dot.booking { background: #003580; }
+  .dot.expedia { background: #FFC72C; }
+
+  /* Toolbar */
+  .toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: white;
+    padding: 16px 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .nav-buttons { display: flex; gap: 8px; align-items: center; }
+  button {
+    background: #3498db;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background 0.2s;
+  }
+  button:hover { background: #2980b9; }
+  button.secondary {
+    background: white;
+    color: #2c3e50;
+    border: 1px solid #ddd;
+  }
+  button.secondary:hover { background: #f0f0f0; }
+  .month-title {
+    font-size: 20px;
+    font-weight: 600;
+    min-width: 200px;
+    text-align: center;
+  }
+
+  /* Calendar */
+  .calendar {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  }
+  .weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    background: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+  }
+  .weekdays div {
+    padding: 12px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 13px;
+    color: #6c757d;
+    text-transform: uppercase;
+  }
+  .days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+  }
+  .day {
+    min-height: 110px;
+    border-right: 1px solid #e9ecef;
+    border-bottom: 1px solid #e9ecef;
+    padding: 6px;
+    position: relative;
+    overflow: hidden;
+  }
+  .day:nth-child(7n) { border-right: none; }
+  .day.other-month { background: #fafbfc; color: #adb5bd; }
+  .day.today { background: #e3f2fd; }
+  .day-number {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .event {
+    font-size: 11px;
+    padding: 3px 6px;
+    border-radius: 4px;
+    margin-bottom: 3px;
+    color: white;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  .event.airbnb { background: #FF5A5F; }
+  .event.booking { background: #003580; }
+  .event.expedia { background: #b8860b; color: #fff; }
+
+  /* Modal */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    max-width: 500px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .modal h2 { margin-bottom: 16px; font-size: 18px; }
+  .modal .field { margin-bottom: 12px; }
+  .modal label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: #495057;
+  }
+  .modal input, .modal select, .modal textarea {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    font-family: inherit;
+  }
+  .modal .actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-top: 16px;
+  }
+  .modal .delete { background: #e74c3c; margin-right: auto; }
+  .modal .delete:hover { background: #c0392b; }
+
+  /* ICS Import */
+  .import-zone {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    margin-top: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  }
+  .import-zone h3 { margin-bottom: 12px; font-size: 16px; }
+  .import-zone p { font-size: 13px; color: #6c757d; margin-bottom: 12px; }
+  .import-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+  }
+  .import-row select { padding: 8px; border-radius: 6px; border: 1px solid #ddd; }
+  .import-row input[type=text] { flex: 1; padding: 8px; border-radius: 6px; border: 1px solid #ddd; min-width: 200px; }
+
+  @media (max-width: 700px) {
+    .day { min-height: 70px; font-size: 11px; }
+    .month-title { min-width: auto; font-size: 16px; }
+    .weekdays div { padding: 8px 4px; font-size: 11px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>📅 Gestion des calendriers</h1>
+    <div class="legend">
+      <div class="legend-item"><span class="dot airbnb"></span> Airbnb</div>
+      <div class="legend-item"><span class="dot booking"></span> Booking</div>
+      <div class="legend-item"><span class="dot expedia"></span> Expedia</div>
+    </div>
+  </header>
+
+  <div class="toolbar">
+    <div class="nav-buttons">
+      <button class="secondary" onclick="changeMonth(-1)">◀</button>
+      <div class="month-title" id="monthTitle"></div>
+      <button class="secondary" onclick="changeMonth(1)">▶</button>
+      <button class="secondary" onclick="goToday()">Aujourd'hui</button>
+    </div>
+    <div class="nav-buttons">
+      <button onclick="openModal()">+ Nouvelle réservation</button>
+      <button class="secondary" onclick="exportData()">💾 Exporter</button>
+      <button class="secondary" onclick="document.getElementById('importFile').click()">📂 Importer</button>
+      <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+    </div>
+  </div>
+
+  <div class="calendar">
+    <div class="weekdays">
+      <div>Lun</div><div>Mar</div><div>Mer</div><div>Jeu</div><div>Ven</div><div>Sam</div><div>Dim</div>
+    </div>
+    <div class="days" id="days"></div>
+  </div>
+
+  <div class="import-zone">
+    <h3>🔗 Importer depuis iCal (Airbnb / Booking / Expedia)</h3>
+    <p>Colle l'URL iCal fournie par la plateforme pour synchroniser automatiquement.</p>
+    <div class="import-row">
+      <select id="icalPlatform">
+        <option value="airbnb">Airbnb</option>
+        <option value="booking">Booking</option>
+        <option value="expedia">Expedia</option>
+      </select>
+      <input type="text" id="icalUrl" placeholder="https://.../calendar.ics">
+      <button onclick="importICal()">Synchroniser</button>
+    </div>
+    <p style="font-size:12px;color:#e67e22;margin-top:8px;">
+      ⚠️ Certaines plateformes bloquent les requêtes CORS. Si l'import échoue, utilise le bouton "Importer" avec un fichier .ics téléchargé manuellement, ou saisis les réservations à la main.
+    </p>
+  </div>
+</div>
+
+<!-- Modal réservation -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h2 id="modalTitle">Nouvelle réservation</h2>
+    <div class="field">
+      <label>Plateforme</label>
+      <select id="fPlatform">
+        <option value="airbnb">Airbnb</option>
+        <option value="booking">Booking</option>
+        <option value="expedia">Expedia</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Nom du voyageur</label>
+      <input type="text" id="fName" placeholder="Ex: Jean Dupont">
+    </div>
+    <div class="field">
+      <label>Arrivée</label>
+      <input type="date" id="fStart">
+    </div>
+    <div class="field">
+      <label>Départ</label>
+      <input type="date" id="fEnd">
+    </div>
+    <div class="field">
+      <label>Notes</label>
+      <textarea id="fNotes" rows="2" placeholder="Nb personnes, prix, etc."></textarea>
+    </div>
+    <div class="actions">
+      <button class="delete" id="deleteBtn" onclick="deleteReservation()">Supprimer</button>
+      <button class="secondary" onclick="closeModal()">Annuler</button>
+      <button onclick="saveReservation()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============ STATE ============
+let reservations = JSON.parse(localStorage.getItem('reservations') || '[]');
+let currentDate = new Date();
+let editingId = null;
+
+// ============ STORAGE ============
+function save() {
+  localStorage.setItem('reservations', JSON.stringify(reservations));
+}
+
+// ============ CALENDAR RENDER ============
+function renderCalendar() {
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+  const monthNames = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+  document.getElementById('monthTitle').textContent = `${monthNames[month]} ${year}`;
+
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+  
+  // Lundi = 0
+  let startWeekday = firstDay.getDay() - 1;
+  if (startWeekday < 0) startWeekday = 6;
+
+  const daysGrid = document.getElementById('days');
+  daysGrid.innerHTML = '';
+
+  const today = new Date();
+  today.setHours(0,0,0,0);
+
+  // Cellules du mois précédent
+  const prevMonthLast = new Date(year, month, 0).getDate();
+  for (let i = startWeekday - 1; i >= 0; i--) {
+    const dayNum = prevMonthLast - i;
+    const cell = createDayCell(dayNum, true, new Date(year, month - 1, dayNum));
+    daysGrid.appendChild(cell);
+  }
+
+  // Jours du mois
+  for (let d = 1; d <= lastDay.getDate(); d++) {
+    const date = new Date(year, month, d);
+    const cell = createDayCell(d, false, date);
+    if (date.getTime() === today.getTime()) cell.classList.add('today');
+    daysGrid.appendChild(cell);
+  }
+
+  // Compléter jusqu'à 42 cellules
+  const totalCells = daysGrid.children.length;
+  const remaining = (7 - (totalCells % 7)) % 7;
+  const nextMonthStart = 1;
+  for (let i = 0; i < remaining; i++) {
+    const cell = createDayCell(nextMonthStart + i, true, new Date(year, month + 1, nextMonthStart + i));
+    daysGrid.appendChild(cell);
+  }
+}
+
+function createDayCell(dayNum, otherMonth, date) {
+  const cell = document.createElement('div');
+  cell.className = 'day';
+  if (otherMonth) cell.classList.add('other-month');
+  
+  const numEl = document.createElement('div');
+  numEl.className = 'day-number';
+  numEl.textContent = dayNum;
+  cell.appendChild(numEl);
+
+  const dateStr = formatDate(date);
+  reservations.forEach(r => {
+    if (dateStr >= r.start && dateStr < r.end) {
+      const ev = document.createElement('div');
+      ev.className = `event ${r.platform}`;
+      ev.textContent = r.name || r.platform;
+      ev.title = `${r.platform} · ${r.name}\n${r.start} → ${r.end}\n${r.notes || ''}`;
+      ev.onclick = (e) => { e.stopPropagation(); openModal(r.id); };
+      cell.appendChild(ev);
+    }
+  });
+
+  cell.onclick = () => openModal(null, dateStr);
+  return cell;
+}
+
+function formatDate(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+function changeMonth(delta) {
+  currentDate.setMonth(currentDate.getMonth() + delta);
+  renderCalendar();
+}
+function goToday() {
+  currentDate = new Date();
+  renderCalendar();
+}
+
+// ============ MODAL ============
+function openModal(id = null, prefillDate = null) {
+  editingId = id;
+  const modal = document.getElementById('modal');
+  const title = document.getElementById('modalTitle');
+  const delBtn = document.getElementById('deleteBtn');
+
+  if (id) {
+    const r = reservations.find(x => x.id === id);
+    if (!r) return;
+    title.textContent = 'Modifier la réservation';
+    document.getElementById('fPlatform').value = r.platform;
+    document.getElementById('fName').value = r.name || '';
+    document.getElementById('fStart').value = r.start;
+    document.getElementById('fEnd').value = r.end;
+    document.getElementById('fNotes').value = r.notes || '';
+    delBtn.style.display = 'block';
+  } else {
+    title.textContent = 'Nouvelle réservation';
+    document.getElementById('fPlatform').value = 'airbnb';
+    document.getElementById('fName').value = '';
+    document.getElementById('fStart').value = prefillDate || formatDate(new Date());
+    const end = new Date(prefillDate || new Date());
+    end.setDate(end.getDate() + 1);
+    document.getElementById('fEnd').value = formatDate(end);
+    document.getElementById('fNotes').value = '';
+    delBtn.style.display = 'none';
+  }
+  modal.classList.add('active');
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('active');
+  editingId = null;
+}
+
+function saveReservation() {
+  const platform = document.getElementById('fPlatform').value;
+  const name = document.getElementById('fName').value.trim();
+  const start = document.getElementById('fStart').value;
+  const end = document.getElementById('fEnd').value;
+  const notes = document.getElementById('fNotes').value.trim();
+
+  if (!start || !end) return alert('Renseigne les dates d\'arrivée et de départ.');
+  if (end <= start) return alert('La date de départ doit être après l\'arrivée.');
+
+  if (editingId) {
+    const r = reservations.find(x => x.id === editingId);
+    Object.assign(r, { platform, name, start, end, notes });
+  } else {
+    reservations.push({
+      id: Date.now().toString(),
+      platform, name, start, end, notes
+    });
+  }
+  save();
+  renderCalendar();
+  closeModal();
+}
+
+function deleteReservation() {
+  if (!editingId) return;
+  if (!confirm('Supprimer cette réservation ?')) return;
+  reservations = reservations.filter(x => x.id !== editingId);
+  save();
+  renderCalendar();
+  closeModal();
+}
+
+// ============ IMPORT / EXPORT ============
+function exportData() {
+  const blob = new Blob([JSON.stringify(reservations, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `reservations-${formatDate(new Date())}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!Array.isArray(data)) throw new Error('Format invalide');
+      if (confirm(`Importer ${data.length} réservations ? Les existantes seront conservées.`)) {
+        data.forEach(r => {
+          r.id = r.id || Date.now().toString() + Math.random();
+          reservations.push(r);
+        });
+        save();
+        renderCalendar();
+      }
+    } catch (err) {
+      alert('Erreur : ' + err.message);
+    }
+    event.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+// ============ iCal IMPORT ============
+async function importICal() {
+  const url = document.getElementById('icalUrl').value.trim();
+  const platform = document.getElementById('icalPlatform').value;
+  if (!url) return alert('Colle une URL iCal.');
+
+  try {
+    // Tentative directe (fonctionne si CORS autorisé)
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Erreur HTTP ' + res.status);
+    const text = await res.text();
+    parseICal(text, platform);
+  } catch (err) {
+    // Fallback : proxy CORS public
+    try {
+      const proxy = 'https://corsproxy.io/?' + encodeURIComponent(url);
+      const res = await fetch(proxy);
+      if (!res.ok) throw new Error('Erreur proxy ' + res.status);
+      const text = await res.text();
+      parseICal(text, platform);
+    } catch (err2) {
+      alert('Impossible de récupérer l\'iCal (CORS bloqué).\nTélécharge le fichier .ics et importe-le manuellement, ou utilise le proxy.' + '\n\nDétail: ' + err2.message);
+    }
+  }
+}
+
+function parseICal(text, platform) {
+  // Parseur iCal basique
+  const events = text.split('BEGIN:VEVENT').slice(1);
+  let count = 0;
+
+  events.forEach(ev => {
+    const getProp = (name) => {
+      const regex = new RegExp(name + '[^:]*:(.+)');
+      const m = ev.match(regex);
+      return m ? m[1].trim() : '';
+    };
+    const dtstart = getProp('DTSTART');
+    const dtend = getProp('DTEND');
+    const summary = getProp('SUMMARY');
+
+    if (dtstart && dtend) {
+      const start = icalDateToISO(dtstart);
+      const end = icalDateToISO(dtend);
+      if (start && end) {
+        // Éviter les doublons exacts
+        const exists = reservations.some(r =>
+          r.start === start && r.end === end && r.platform === platform
+        );
+        if (!exists) {
+          reservations.push({
+            id: Date.now().toString() + Math.random(),
+            platform,
+            name: summary || platform,
+            start,
+            end,
+            notes: 'Import iCal'
+          });
+          count++;
+        }
+      }
+    }
+  });
+
+  save();
+  renderCalendar();
+  alert(`✅ ${count} réservation(s) importée(s) depuis ${platform}.`);
+  document.getElementById('icalUrl').value = '';
+}
+
+function icalDateToISO(s) {
+  // Format: 20240115 ou 20240115T160000Z
+  const clean = s.split('T')[0].replace(/[^0-9]/g, '');
+  if (clean.length < 8) return null;
+  return `${clean.slice(0,4)}-${clean.slice(4,6)}-${clean.slice(6,8)}`;
+}
+
+// ============ INIT ============
+document.getElementById('modal').addEventListener('click', (e) => {
+  if (e.target.classList.contains('modal-overlay')) closeModal();
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeModal();
+});
+
+renderCalendar();
+</script>
+</body>
+</html>
